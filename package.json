@@ -1,7 +1,7 @@
 {
-  "name": "vanilla-blog",
+  "name": "blog-n-jean",
   "version": "1.0.0",
-  "description": "Vanilla Blog React Assignment",
+  "description": "Blog N Jean, React Assignment",
   "main": "src/server/index.js",
   "scripts": {
     "build": "webpack --mode production",
