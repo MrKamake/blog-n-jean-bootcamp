@@ -1,4 +1,4 @@
-# Vanilla Blog
+# Let's make your blog engine
 
 ## 1. Setup
 
