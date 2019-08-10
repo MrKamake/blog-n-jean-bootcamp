@@ -85,7 +85,24 @@ Summary: 사용자는 블로그 글 목록을 볼 수 있어야 합니다.
 }
 ```
 
-##### 2. GET `/api/v1/tags/:tag_id`
+##### 2. GET `/api/v1/tags`
+
+태그 목록을 가져올 수 있는 endpoint입니다.
+
+- Request Parameters
+
+N/A
+
+-  Sample Response
+
+```js
+[{
+    "name" : "javascript",
+    "id" : 1
+}]
+```
+
+##### 3. GET `/api/v1/tags/:tag_id`
 
 태그 상세 정보를 가져올 수 있는 endpoint입니다.
 

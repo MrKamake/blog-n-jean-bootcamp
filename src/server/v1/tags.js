@@ -1,6 +1,10 @@
 const router = require('express').Router();
 const tags = require('../data/tags.json');
 
+router.get('/', (req, res) => {
+  res.json(tags);
+});
+
 router.get('/:tag_id', (req, res) => {
   if (req.params.tag_id && isNaN(Number(req.params.tag_id))) {
     res.status(400).json({
