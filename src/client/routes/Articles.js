@@ -6,17 +6,18 @@ export default class Articles extends Component {
     super(props);
   }
 
-  _renderPosts = posts => {
+  _renderPosts = (posts, tagList) => {
     const postList = posts.map(post => {
       return (
         <div className='post-element' key={post.id}>
           <img src={post.thumbnail_image_url} alt={post.id} />
-          <span>{post.id}/////</span>
-          <span>{post.title}</span>
-          <span>{post.by}</span>
-          <span>{post.created_at}</span>
-          <span>{post.tag}</span>
-          <span>{post.comments_count}</span>
+          {<Link to={`/articles/${post.title}`}>{post.title}</Link>}
+          <div>{post.by}</div>
+          <div>{post.created_at}</div>
+          {post.tags.map(idx => (
+            <div key={idx}>{tagList[idx - 1].name}</div>
+          ))}
+          <div>{post.comments_count}</div>
         </div>
       );
     });
@@ -24,7 +25,8 @@ export default class Articles extends Component {
   };
 
   render() {
-    return <div>{this._renderPosts(this.props.posts)}</div>;
+    const { posts, tagList } = this.props;
+    return <div>{this._renderPosts(posts, tagList)}</div>;
   }
 }
 

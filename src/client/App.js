@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Redirect } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Redirect, Switch, Link } from 'react-router-dom';
 import debounce from 'lodash/debounce';
 import './App.less';
 import Articles from './routes/Articles';
+import Test from  './routes/Test';
 
 export default class App extends Component {
   constructor(props) {
@@ -16,8 +17,8 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-    this._getPostApi();
     this._getTagsApi();
+    this._getPostApi();
     window.addEventListener('scroll', debounce(this._scrollPage, 200));
   }
 
@@ -79,24 +80,37 @@ export default class App extends Component {
     const { posts, tagList } = this.state;
     return (
       <Router>
-          <button
-            className='ascending-btn'
-            onClick={this._onSortingClick.bind(this, 'asc')}
-          >
-            오름차순
-          </button>
-          <button
-            className='descending-btn'
-            onClick={this._onSortingClick.bind(this, '')}
-          >
-            내림차순
-          </button>
-          <div className='tag-list'>
-            <div className='tag-list-title'>Tag List</div>
-            <div className='tag-list-box'>{this._renderTagList(tagList)}</div>
-          </div>
-          <Route exact path='/' render={() => <Redirect to='/articles' />} />
-          <Route path='/articles' render={() => <Articles posts={posts} />} />
+        <button
+          className='ascending-btn'
+          onClick={this._onSortingClick.bind(this, 'asc')}
+        >
+          오름차순
+        </button>
+        <button
+          className='descending-btn'
+          onClick={this._onSortingClick.bind(this, '')}
+        >
+          내림차순
+        </button>
+        <div className='tag-list'>
+          <div className='tag-list-title'>Tag List</div>
+          <div className='tag-list-box'>{this._renderTagList(tagList)}</div>
+        </div>
+        <Switch>
+          <Route
+            exact
+            path='/'
+            render={() => <Redirect to='/articles' />}
+          />
+          <Route
+            path='/articles/:title'
+            render={() => <Test />}
+          />
+          <Route
+            path='/articles'
+            render={() => <Articles posts={posts} tagList={tagList} />}
+          />
+        </Switch>
       </Router>
     );
   }
