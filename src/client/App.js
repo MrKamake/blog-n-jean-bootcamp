@@ -1,9 +1,16 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route, Redirect, Switch, Link } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Route,
+  Redirect,
+  Switch,
+  Link
+} from 'react-router-dom';
 import debounce from 'lodash/debounce';
 import './App.less';
 import Articles from './routes/Articles';
-import Test from  './routes/Test';
+import Test from './routes/Test';
+import Admin from './routes/Admin';
 
 export default class App extends Component {
   constructor(props) {
@@ -11,8 +18,11 @@ export default class App extends Component {
 
     this.state = {
       posts: [],
-      numOfAlticles: 10,
-      tagList: []
+      tagList: [],
+      filteredPosts: [],
+      hasTag: false,
+      pageIndex: 0,
+      sortStyle: 'dsc'
     };
   }
 
@@ -22,28 +32,89 @@ export default class App extends Component {
     window.addEventListener('scroll', debounce(this._scrollPage, 200));
   }
 
-  componentWillUnmount() {
-    window.removeEventListener('scroll', debounce(this._scrollPage, 200));
-  }
-
-  _getPostApi = sortingStyle => {
-    const { numOfAlticles } = this.state;
-    const sortingBtn = sortingStyle ? 'asc' : 'dsc';
-    let url = `/api/v1/articles?limit=${numOfAlticles}&sort=${sortingBtn}`;
-
-    fetch(url)
-      .then(articles => articles.json())
-      .then(articles => this.setState({ posts: articles.posts }));
-  };
-
   _getTagsApi = () => {
     fetch('/api/v1/tags')
       .then(tags => tags.json())
       .then(tags => this.setState({ tagList: tags }));
   };
 
-  _onSortingClick = sortingValue => {
-    this._getPostApi(sortingValue);
+  _getPostApi = postId => {
+    const { posts, pageIndex, sortStyle } = this.state;
+    let url = `/api/v1/articles?limit=10&sort=${sortStyle}&pageIndex=${pageIndex}`;
+    if (postId) {
+      url = `/api/v1/articles/${postId}`;
+      fetch(url, {
+        method: 'DELETE'
+      })
+        .then(articles => articles.json());
+    } else {
+      fetch(url)
+        .then(articles => articles.json())
+        .then(articles =>
+          this.setState({
+            posts: [...posts, ...articles.posts],
+            pageIndex: pageIndex + 1
+          })
+        );
+    }
+  };
+
+  _onSortingBtnClick = sortingValue => {
+    const { filteredPosts } = this.state;
+    let sortType = sortingValue;
+    if (sortType !== 'asc') {
+      sortType = 'dsc';
+    }
+    if (filteredPosts.length) {
+      if (sortType === 'asc') {
+        this.setState({
+          posts: filteredPosts.sort((a, b) => {
+            return new Date(a.created_at) - new Date(b.created_at);
+          })
+        });
+      } else {
+        this.setState({
+          posts: filteredPosts.sort((a, b) => {
+            return new Date(b.created_at) - new Date(a.created_at);
+          })
+        });
+      }
+    } else {
+      this.setState(
+        {
+          posts: [],
+          pageIndex: 0,
+          sortStyle: sortType
+        },
+        () => this._getPostApi()
+      );
+    }
+  };
+
+  _onTagBtnClick = tagId => {
+    const { posts } = this.state;
+    const filteredPosts = posts.filter(post => {
+      if (post.tags.includes(tagId)) {
+        return post;
+      }
+    });
+    if (filteredPosts.length) {
+      this.setState({
+        hasTag: true,
+        filteredPosts: filteredPosts
+      });
+    } else {
+      this.setState({
+        hasTag: true,
+        filteredPosts: []
+      });
+    }
+  };
+
+  _onDeleteClick = postId => {
+    console.log('삭제버튼이다 임마~!!');
+    console.log(postId);
+    this._getPostApi(postId);
   };
 
   _scrollPage = () => {
@@ -58,57 +129,52 @@ export default class App extends Component {
     let clientHeight = document.documentElement.clientHeight;
 
     if (scrollHeight - scrollTop - clientHeight <= 200) {
-      this.setState({
-        numOfAlticles: this.state.numOfAlticles + 10
-      });
       this._getPostApi();
     }
   };
 
-  _renderTagList = tagList => {
-    const tagNameList = tagList.map((tag, index) => {
-      return (
-        <div className='tag-list-elements' key={index}>
-          {tag.name}
-        </div>
-      );
-    });
-    return tagNameList;
-  };
-
   render() {
-    const { posts, tagList } = this.state;
+    const { posts, tagList, filteredPosts, hasTag } = this.state;
     return (
       <Router>
-        <button
-          className='ascending-btn'
-          onClick={this._onSortingClick.bind(this, 'asc')}
-        >
-          오름차순
-        </button>
-        <button
-          className='descending-btn'
-          onClick={this._onSortingClick.bind(this, '')}
-        >
-          내림차순
-        </button>
-        <div className='tag-list'>
-          <div className='tag-list-title'>Tag List</div>
-          <div className='tag-list-box'>{this._renderTagList(tagList)}</div>
+        <div className='menu-button'>
+          <Link to='/articles'>Articles</Link>
+          <Link to='/admin'>Admin</Link>
         </div>
         <Switch>
+          <Route exact path='/' render={() => <Redirect to='/articles' />} />
           <Route
             exact
-            path='/'
-            render={() => <Redirect to='/articles' />}
+            path='/admin'
+            render={() => <Redirect to='/admin/posts' />}
           />
+          {hasTag ? (
+            <Articles
+              posts={filteredPosts}
+              tagList={tagList}
+              onSortingBtnClick={this._onSortingBtnClick}
+              onTagBtnClick={this._onTagBtnClick}
+            />
+          ) : (
+            <Route
+              exact
+              path='/articles'
+              render={() => (
+                <Articles
+                  posts={posts}
+                  tagList={tagList}
+                  onSortingBtnClick={this._onSortingBtnClick}
+                  onTagBtnClick={this._onTagBtnClick}
+                />
+              )}
+            />
+          )}
+          <Route path='/articles/:articlesTitle' render={() => <Test />} />
           <Route
-            path='/articles/:title'
-            render={() => <Test />}
-          />
-          <Route
-            path='/articles'
-            render={() => <Articles posts={posts} tagList={tagList} />}
+            path='/admin'
+            render={() => (
+              <Admin posts={posts} onDeleteClick={this._onDeleteClick} />
+            )}
           />
         </Switch>
       </Router>
